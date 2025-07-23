@@ -20,8 +20,8 @@ body {
 body {
     font-family: system-ui;
     background-color: var(--background-color);
-    color: var(--lable-text-color);
     position: relative;
+    overflow: hidden;
     text-align: center;
 }
 
@@ -60,47 +60,71 @@ h2 {
     color: var(--h2-color)
 }
 
-h3 {
-    color: var(--lable-text-color);
-}
-
 .form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
     background: var(--form-background-color);
     border: 1px solid var(--border-color);
     border-radius: 28px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 20px;
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
-.value-container {
-    color: var(--lable-text-color);
+.login-form {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
 }
 
-.output-container {
-    width: 100%;
-    padding: 8px;
-    text-align: center;
-    background-color: var(--input-background-color);
+.form-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+label {
+    font-weight: bold;
     color: var(--lable-text-color);
+}
+
+.password-wrapper {
+    display: flex;
+    width: 100%;
+    position: relative;
+}
+
+.password-wrapper input[type=password],
+.password-wrapper input[type=text] {
+    width: 100%;
+    padding-right: 40px;
+    text-align: center;
+    margin: 0;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    color: darkgray;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
+    color: var(--lable-text-color);
+    background-color: var(--input-background-color);
 }
 
-.copy-icon {
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.copy-icon:hover {
-    color: #2980b9;
+.hint {
+    color: red;
+    margin-bottom: 10px;
 }
 
 button {
@@ -132,13 +156,7 @@ button {
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
 }
 
-.button:active {
-    transform: translateY(1px);
-    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
-}
-
 .material-symbols-rounded {
-    cursor: pointer;
     font-variation-settings:
         'FILL' 1,
         'wght' 400,
@@ -160,6 +178,6 @@ button {
 
 @media only screen and (min-width: 992px) {
     .container {
-        width: 40%;
+        width: 30%;
     }
 }

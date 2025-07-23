@@ -100,7 +100,7 @@
       <td>❌</td>
     </tr>
     <tr>
-      <td><b>Shadowrocket</b></td>
+      <td><b>SR</b></td>
       <td></td>
       <td>❌</td>
       <td>❌</td>

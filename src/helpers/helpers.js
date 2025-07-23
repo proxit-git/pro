@@ -1,12 +1,12 @@
 import { Authenticate, generateJWTToken, resetPassword } from "../authentication/auth";
-import { getClashNormalConfig, getClashWarpConfig } from "../cores-configs/clash";
-import { extractWireguardParams } from "../cores-configs/helpers";
-import { getHiddifyWarpConfigs, getNormalConfigs } from "../cores-configs/normalConfigs";
-import { getSingBoxCustomConfig, getSingBoxWarpConfig } from "../cores-configs/sing-box";
-import { getXrayCustomConfigs, getXrayWarpConfigs } from "../cores-configs/xray";
-import { getDataset, updateDataset } from "../kv/handlers";
+import { getClashNormalConfig, getClashWarpConfig } from "../core/c";
+import { extractWireguardParams } from "../core/helpers";
+import { getHiddifyWarpConfigs, getNormalConfigs } from "../core/n";
+import { getSingBoxCustomConfig, getSingBoxWarpConfig } from "../core/s";
+import { getXrayCustomConfigs, getXrayWarpConfigs } from "../core/x";
+import { getDataset, updateDataset } from "../storage/handlers";
 import JSZip from "jszip";
-import { fetchWarpConfigs } from "../protocols/warp";
+import { fetchWarpConfigs } from "../threads/w";
 
 export function isValidUUID(uuid) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -16,21 +16,21 @@ export function isValidUUID(uuid) {
 export async function handlePanel(request, env) {
 
     switch (globalThis.pathName) {
-        case '/panel':
+        case '/manage':
             return await renderPanel(request, env);
-        case '/panel/settings':
+        case '/manage/settings':
             return await getSettings(request, env);
-        case '/panel/update-settings':
+        case '/manage/update-settings':
             return await updateSettings(request, env);
-        case '/panel/reset-settings':
+        case '/manage/reset-settings':
             return await resetSettings(request, env);
-        case '/panel/reset-password':
+        case '/manage/reset-password':
             return await resetPassword(request, env);
-        case '/panel/my-ip':
+        case '/manage/my-ip':
             return await getMyIP(request);
-        case '/panel/update-warp':
+        case '/manage/update-warp':
             return await updateWarpConfigs(request, env);
-        case '/panel/get-warp-configs':
+        case '/manage/get-warp-configs':
             return await getWarpConfigs(request, env);
         default:
             return await fallback(request);
@@ -43,8 +43,8 @@ export async function handleError(error) {
 }
 
 export async function handleLogin(request, env) {
-    if (globalThis.pathName === '/login') return await renderLogin(request, env);
-    if (globalThis.pathName === '/login/authenticate') return await generateJWTToken(request, env);
+    if (globalThis.pathName === '/sign') return await renderLogin(request, env);
+    if (globalThis.pathName === '/sign/authenticate') return await generateJWTToken(request, env);
     return await fallback(request);
 }
 
@@ -135,7 +135,7 @@ async function resetSettings(request, env) {
 
 async function getSettings(request, env) {
     try {
-        const isPassSet = await env.kv.get('pwd') ? true : false;
+        const isPassSet = await env.WALLET.get('pwd') ? true : false;
         const auth = await Authenticate(request, env);
         if (!auth) return await respond(false, 401, 'Unauthorized or expired session.', { isPassSet });
         const { proxySettings } = await getDataset(request, env);
@@ -202,7 +202,7 @@ async function getWarpConfigs(request, env) {
 
     try {
         warpEndpoints.forEach((endpoint, index) => {
-            zip.file(`BPB-Warp-${index + 1}.conf`, trimLines(
+            zip.file(`MW${index + 1}.conf`, trimLines(
                 `[Interface]
                 PrivateKey = ${privateKey}
                 Address = 172.16.0.2/32, ${warpIPv6}
@@ -222,7 +222,7 @@ async function getWarpConfigs(request, env) {
         return new Response(arrayBuffer, {
             headers: {
                 "Content-Type": "application/zip",
-                "Content-Disposition": `attachment; filename="BPB-Warp-${isPro ? "Pro-" : ""}configs.zip"`,
+                "Content-Disposition": `attachment; filename="MW${isPro ? "Pro" : ""}.zip"`,
             },
         });
     } catch (error) {
@@ -241,10 +241,10 @@ export async function serveIcon() {
 }
 
 async function renderPanel(request, env) {
-    const pwd = await env.kv.get('pwd');
+    const pwd = await env.WALLET.get('pwd');
     if (pwd) {
         const auth = await Authenticate(request, env);
-        if (!auth) return Response.redirect(`${globalThis.urlOrigin}/login`, 302);
+        if (!auth) return Response.redirect(`${globalThis.urlOrigin}/sign`, 302);
     }
 
     const html = __PANEL_HTML_CONTENT__.replace(/__PANEL_VERSION__/g, globalThis.panelVersion);
@@ -255,7 +255,7 @@ async function renderPanel(request, env) {
 
 async function renderLogin(request, env) {
     const auth = await Authenticate(request, env);
-    if (auth) return Response.redirect(`${urlOrigin}/panel`, 302);
+    if (auth) return Response.redirect(`${urlOrigin}/manage`, 302);
 
     const html = __LOGIN_HTML_CONTENT__.replace(/__PANEL_VERSION__/g, globalThis.panelVersion);
     return new Response(html, {
@@ -284,10 +284,10 @@ async function updateWarpConfigs(request, env) {
         if (!auth) return await respond(false, 401, 'Unauthorized.');
         try {
             await fetchWarpConfigs(env);
-            return await respond(true, 200, 'Warp configs updated successfully!');
+            return await respond(true, 200, 'W configs updated successfully!');
         } catch (error) {
             console.log(error);
-            return await respond(false, 500, `An error occurred while updating Warp configs: ${error}`);
+            return await respond(false, 500, `An error occurred while updating W configs: ${error}`);
         }
     }
 

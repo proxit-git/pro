@@ -50,7 +50,7 @@ async function processHtmlPages() {
 async function buildWorker() {
 
     const htmls = await processHtmlPages();
-    const faviconBuffer = readFileSync('./src/assets/favicon.ico');
+    const faviconBuffer = readFileSync('./src/assets/file.ico');
     const faviconBase64 = faviconBuffer.toString('base64');
 
     const code = await build({
@@ -62,8 +62,8 @@ async function buildWorker() {
         platform: 'browser',
         target: 'es2020',
         define: {
-            __PANEL_HTML_CONTENT__: htmls['panel'] ?? '""',
-            __LOGIN_HTML_CONTENT__: htmls['login'] ?? '""',
+            __PANEL_HTML_CONTENT__: htmls['manage'] ?? '""',
+            __LOGIN_HTML_CONTENT__: htmls['sign'] ?? '""',
             __ERROR_HTML_CONTENT__: htmls['error'] ?? '""',
             __SECRETS_HTML_CONTENT__: htmls['secrets'] ?? '""',
             __ICON__: JSON.stringify(faviconBase64)
@@ -104,14 +104,14 @@ async function buildWorker() {
 
     const worker = `// @ts-nocheck\n${finalCode}`;
     mkdirSync(DIST_PATH, { recursive: true });
-    writeFileSync('./dist/worker.js', worker, 'utf8');
+    writeFileSync('./dist/build.js', worker, 'utf8');
 
     const zip = new JSZip();
-    zip.file('_worker.js', worker);
+    zip.file('_build.js', worker);
     zip.generateAsync({
         type: 'nodebuffer',
         compression: 'DEFLATE'
-    }).then(nodebuffer => writeFileSync('./dist/worker.zip', nodebuffer));
+    }).then(nodebuffer => writeFileSync('./dist/build.zip', nodebuffer));
 
     console.log('✅ Done!');
 }

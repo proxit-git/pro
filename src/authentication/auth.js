@@ -5,12 +5,12 @@ import { respond } from '../helpers/helpers';
 export async function generateJWTToken(request, env) {
     if (request.method !== 'POST') return await respond(false, 405, 'Method not allowed.');
     const password = await request.text();
-    const savedPass = await env.kv.get('pwd');
+    const savedPass = await env.WALLET.get('pwd');
     if (password !== savedPass) return await respond(false, 401, 'Wrong password.');
-    let secretKey = await env.kv.get('secretKey');
+    let secretKey = await env.WALLET.get('secretKey');
     if (!secretKey) {
         secretKey = generateSecretKey();
-        await env.kv.put('secretKey', secretKey);
+        await env.WALLET.put('secretKey', secretKey);
     }
     const secret = new TextEncoder().encode(secretKey);
     const jwtToken = await new SignJWT({ userID: globalThis.userID })
@@ -32,7 +32,7 @@ function generateSecretKey() {
 
 export async function Authenticate(request, env) {
     try {
-        const secretKey = await env.kv.get('secretKey');
+        const secretKey = await env.WALLET.get('secretKey');
         const secret = new TextEncoder().encode(secretKey);
         const cookie = request.headers.get('Cookie')?.match(/(^|;\s*)jwtToken=([^;]*)/);
         const token = cookie ? cookie[2] : null;
@@ -60,11 +60,11 @@ export async function logout() {
 
 export async function resetPassword(request, env) {
     let auth = await Authenticate(request, env);
-    const oldPwd = await env.kv.get('pwd');
+    const oldPwd = await env.WALLET.get('pwd');
     if (oldPwd && !auth) return await respond(false, 401, 'Unauthorized.');
     const newPwd = await request.text();
     if (newPwd === oldPwd) return await respond(false, 400, 'Please enter a new Password.');
-    await env.kv.put('pwd', newPwd);
+    await env.WALLET.put('pwd', newPwd);
     return await respond(true, 200, 'Successfully logged in!', null, {
         'Set-Cookie': 'jwtToken=; Path=/; Secure; SameSite=None; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
         'Content-Type': 'text/plain',
